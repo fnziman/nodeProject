@@ -36,13 +36,4 @@ fs.readFile('./animals.txt', 'utf-8', (err, data) => {
 
 });
 
-//////////////////////////////////////////////////////////////
 
-// const server = http.createServer((req, res) => {
-//   res.write('Hello World');
-//   res.end();
-// });
-// 
-// server.listen(5000, () => console.log("I'm listening on port 5000"));
-
-////////////////////////////////////////////////////////////////////
