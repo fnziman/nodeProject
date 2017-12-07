@@ -1,44 +1,57 @@
 const fs = require('fs');
 const http = require('http');
 const qs = require('querystring');
+const cache = {};
 
 const server = http.createServer((req, res) => {
-  const query = req.url.split('?')[1]
-  const searchLetter = qs.parse(query).letter
+  const query = req.url.split('?')[1];
+  const searchLetter = qs.parse(query).letter;
   
-  if (searchLetter) {
-    fs.readFile('./animals.txt', 'utf-8', (err, data) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      const allAnimals = data.split('\n');
-      const searchedAnimals = [];
-    
-      allAnimals.forEach(animal => {
-        if (animal === "") {
+  if (searchLetter !== undefined) {
+    if (cache[searchLetter] !== undefined) {
+      res.write(`accessed cached letter: ${searchLetter} \n`);
+      res.end(cache[searchLetter]);
+    } else {
+      fs.readFile('./animals.txt', 'utf-8', (err, data) => {
+        if (err) {
+          console.log(err);
+          res.end('ERROR');
           return;
         }
-        if (animal[0].toLowerCase() === searchLetter.toLowerCase()) {
-          searchedAnimals.push(animal);
-        }
+        const allAnimals = data.split('\n');
+        const searchedAnimals = [];
+      
+        allAnimals.forEach(animal => {
+          if (animal === "" || animal === "list") {
+            return;
+          }
+          if (animal[0].toLowerCase() === searchLetter.toLowerCase()) {
+            searchedAnimals.push(animal);
+          }
+        });
+        result = searchedAnimals.join('\n');
+        cache[searchLetter] = result;
+        res.write(`caching letter: ${searchLetter} \n`);
+        res.end(result);
       });
-      result = searchedAnimals.join('\n');
-      res.end(result);
-    });
-    
+    }
   } else {
-    fs.readFile('./animals.txt', 'utf-8', (err, data) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-      res.end(data)
-    });
+    if (cache['data'] !== undefined) {
+      res.write(`accessing cached data file \n`);
+      res.end(cache['data']);
+    } else {
+      fs.readFile('./animals.txt', 'utf-8', (err, data) => {
+        if (err) {
+          console.log(err);
+          res.end('ERROR');
+          return;
+        }
+        res.write("caching entire animal file \n");
+        cache['data'] = data;
+        res.end(data);
+      });
+    }
   }
-  // res.end(result);
 });
 
 server.listen(5000, () => console.log('Listening on port 5000'));
-
-////////////////////////////////////////////////////////////////////
